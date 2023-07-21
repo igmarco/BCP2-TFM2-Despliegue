@@ -16,7 +16,7 @@ from Entrenamiento.entrenamiento_pesos import entrenar_pesos_fila
 app = FastAPI()
 
 @app.get("/")
-def ofrecer_descripcion():
+def description():
     return {"Descripción (ESP)": "El servicio DS-AIT (Herramienta de Ciencia de Datos aplicada a la Identificación de Direcciones)es una herramienta que permite identificar la información geográfica concreta a partir de una cadena de texto libre. Este proceso se lleva a cabo a través del contraste con una base de datos normalizada, alimentada con información de IDERioja.",
             "Description (ENG)": "The DS-AIT service (Data Science Tool applied to Address Identification) is a tool that allows the identification of specific geographic information from a free text string. This process is carried out through the contrast with a normalized database, fed with information from IDERioja."}
 
