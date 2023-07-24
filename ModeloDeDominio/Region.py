@@ -1,6 +1,25 @@
 from utiles import decode_json
 
 class Region:
+    """
+    Representa el nombre o topónimo de una región determinada (estado,
+    comunidad autónoma, provincia, vía, etc.). Por tanto, se puede asociar con 0-*
+    regiones reales definidas en la base de datos de referencia.
+
+    Attributes
+    ----------
+    estructura : str
+        tipo de región. Valores posibles: {“estado”, “ca”, “provincia”,
+        “comarca”, “municipio”, “nivel”, “tipovia”, “numero”, “codPostal”,
+        “nombrepropio”}
+    nombre : str
+        nombre concreto de la región
+    confianza : float
+        nivel de confianza para la cadena match
+    match : str
+        cadena de una dirección con la que se asocia el nombre de región.
+    """
+
     def __init__(self, estructura, nombre, confianza=None, match=None):
         self.estructura = estructura
         self.nombre = nombre
@@ -9,10 +28,38 @@ class Region:
 
     @staticmethod
     def regiones(estructura, redis_connection):
+        """
+        Devuelve todas las Regiones (nombres de región) que se
+        correspondan con la estructura especificada.
+
+        Parameters
+        ----------
+        estructura : str
+            tipo de región. Valores posibles: {“estado”, “ca”, “provincia”,
+            “comarca”, “municipio”, “nivel”, “tipovia”, “numero”, “codPostal”,
+            “nombrepropio”}
+        redis_connection : object
+            conexión con la BD Redis con los registros T1
+        """
+
         r_keys = redis_connection.keys(estructura + ':*')
         return [Region(estructura, str(reg.decode().split(':')[1])) for reg in r_keys]
 
     def subregiones(self, subestructura, r):
+        """
+        Devuelve todas las Regiones (nombres de región) que se
+        correspondan con la subestructura especificada para la Region.
+
+        Parameters
+        ----------
+        subestructura : str
+            tipo de región. Valores posibles: {“estado”, “ca”, “provincia”,
+            “comarca”, “municipio”, “nivel”, “tipovia”, “numero”, “codPostal”,
+            “nombrepropio”}
+        r : object
+            conexión con la BD Redis con los registros T1
+        """
+
         if self.estructura == 'nombrepropio':
             nom_subestructura = subestructura
             if nom_subestructura in ['via', 'municipio', 'provincia', 'ca', 'estado']:
@@ -27,6 +74,10 @@ class Region:
         return [Region(subestructura, str(subreg)) for subreg in r_keys]
 
     def nombres(self):
+        """
+        Devuelve una lista con los posibles nombres derivados de la
+        Region.
+        """
         nombres = []
 
         for nombre_sub_bar in self.nombre.split('/'):
@@ -43,6 +94,16 @@ class Region:
         return nombres
 
     def elementos(self, r):
+        """
+        Devuelve una lista con los elementos región almacenados en la
+        base de datos (en formato JSON) cuyo nombre es el de la Region.
+
+        Parameters
+        ----------
+        r : object
+            conexión con la BD Redis con los registros T1
+        """
+
         return decode_json(r.get(self.estructura + ':' + self.nombre))
 
     def __repr__(self):
@@ -67,10 +128,39 @@ class Region:
 
 
 class RegionVacia(Region):
+    """
+    Representa el conjunto de nombres asociados a una determinada
+    estructura en la base de datos en su estado actual independientemente de su fecha
+    de creación. No debemos confundir este concepto con el conjunto de todas las
+    Regiones posibles, ya que entonces podríamos pensar que la función que calcula
+    las subregiones de una RegionVacia devolvería otra RegionVacia, y no es así.
+
+    Attributes
+    ----------
+    estructura : str
+        tipo de región. Valores posibles: {“estado”, “ca”, “provincia”,
+        “comarca”, “municipio”, “nivel”, “tipovia”, “numero”, “codPostal”,
+        “nombrepropio”}
+    """
+
     def __init__(self, estructura):
         Region.__init__(self, estructura, '*')
 
     def subregiones(self, subestructura, r):
+        """
+        Devuelve todas las Regiones (nombres de región) que sean
+        subregiones de alguna región de la base de datos.
+
+        Parameters
+        ----------
+        subestructura : str
+            tipo de región. Valores posibles: {“estado”, “ca”, “provincia”,
+            “comarca”, “municipio”, “nivel”, “tipovia”, “numero”, “codPostal”,
+            “nombrepropio”}
+        r : object
+            conexión con la BD Redis con los registros T1
+        """
+
         return Region.regiones(subestructura, r)
 
     def __eq__(self, reg):

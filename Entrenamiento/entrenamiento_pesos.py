@@ -14,6 +14,16 @@ from Recorrido.recorrer_BD_secuencial import mejores_resultados_recorrer_BD_secu
 from DamerauLevenshtein.DL_training import damerau_levenshtein_distance_training
 
 def inicializar_entrenamiento(r_pesos):
+    """
+    Almacena en la BD Redis correspondiente a las correspondencias del algoritmo de comparación de cadenas valores por
+    defecto.
+
+    Parameters
+    ----------
+    r_pesos : object
+        conexión con la BD Redis correspondiente a los pesos y correspondencias
+    """
+
     pesos_delete_correspondencias = {}
     for ch in string.ascii_letters + string.digits + string.punctuation + 'ñÑáÁéÉíÍóÓúÚüÜºª ':
         pesos_delete_correspondencias[ch] = 0
@@ -45,6 +55,16 @@ def inicializar_entrenamiento(r_pesos):
 
 
 def inicializar_pesos(r_pesos):
+    """
+    Almacena en la BD Redis correspondiente a los pesos del algoritmo de comparación de cadenas valores por
+    defecto.
+
+    Parameters
+    ----------
+    r_pesos : object
+        conexión con la BD Redis correspondiente a los pesos y correspondencias
+    """
+
     pesos_delete_def = {}
     for ch in string.ascii_letters + string.digits + string.punctuation + 'ñÑáÁéÉíÍóÓúÚüÜºª ':
         pesos_delete_def[ch] = 1
@@ -73,6 +93,21 @@ def inicializar_pesos(r_pesos):
 
 
 def entrenar_pesos(ruta_fichero, r_BD, r_pesos, umbral_tolerancia=0.5):
+    """
+    En base a las direcciones contenidas en un fichero CSV con la información sobre las cadenas de las direcciones más
+    sus correspondientes campos reales, se entrenan las correspondencias bajo una tolerancia mínima
+
+    Parameters
+    ----------
+    ruta_fichero : str
+        ruta del fichero CSV que contiene la información sobre la dirección
+    r_BD : object
+        conexión con la BD Redis correspondiente a los registros T1
+    r_pesos : object
+        conexión con la BD Redis correspondiente a los pesos y correspondencias
+    umbral_tolerancia : float
+        valor entre 0 y 1 que representa el umbral de la tolerancia ante la confianza de los resultados
+    """
 
     pesos_delete_correspondencias = {}
     pesos_insert_correspondencias = {}
@@ -165,6 +200,23 @@ def entrenar_pesos(ruta_fichero, r_BD, r_pesos, umbral_tolerancia=0.5):
     r_pesos.set('uso_letras', json.dumps(uso_letras))
 
 def entrenar_pesos_fila(fila_dict, r_BD, r_pesos, umbral_tolerancia=0.5):
+    """
+    En base a la dirección contenida en un diccionario con la información sobre la cadena de la dirección más
+    sus correspondientes campos reales, se entrenan las correspondencias bajo una tolerancia mínima
+
+    Parameters
+    ----------
+    fila_dict : dict
+        diccionario contenedor de la cadena de la dirección y de los valores correspondientes a las regiones reales
+        de la direccion
+    r_BD : object
+        conexión con la BD Redis correspondiente a los registros T1
+    r_pesos : object
+        conexión con la BD Redis correspondiente a los pesos y correspondencias
+    umbral_tolerancia : float
+        valor entre 0 y 1 que representa el umbral de la tolerancia ante la confianza de los resultados
+    """
+
     general_path = 'DatosCSV/cargas.csv'
     tmp_path = 'DatosCSV/carga_temp.csv'
 
@@ -204,6 +256,16 @@ def entrenar_pesos_fila(fila_dict, r_BD, r_pesos, umbral_tolerancia=0.5):
 
 
 def actualizar_pesos(r_pesos):
+    """
+    Se recogen los valores de las correspondencias y se actualizan en base a ellos los valores de los pesos del
+    algoritmo
+
+    Parameters
+    ----------
+    r_pesos : object
+        conexión con la BD Redis correspondiente a los pesos y correspondencias
+    """
+
     pesos_delete = {}
     pesos_insert = {}
     pesos_subs = {}

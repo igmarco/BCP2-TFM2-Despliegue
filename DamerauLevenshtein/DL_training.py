@@ -3,6 +3,19 @@ from DamerauLevenshtein.DL import damerau_levenshtein_distance, print_matrix
 from Variables.pesos import pesos_delete_def, pesos_insert_def, pesos_subs_def, pesos_transp_def, contextos
 
 def actualizar_temporales(proceso, s1, s2):
+    """
+    Devuelve en base al proceso seguido por el algoritmo D-L las matrices de correspondencias, contextos y usos.
+
+    Parameters
+    ----------
+    proceso : list
+        lista de pasos que ha seguido el algoritmo D-L para alcanzar el resultado final
+    s2 : str
+        primera cadena en la aplicación del algoritmo D-L
+    s1 : str
+        segunda cadena en la aplicación del algoritmo D-L
+    """
+
     pesos_delete_correspondencias_tmp = {}
     pesos_insert_correspondencias_tmp = {}
     pesos_subs_correspondencias_tmp = {}
@@ -58,6 +71,30 @@ def damerau_levenshtein_distance_training(s1, s2, pesos_delete=pesos_delete_def,
                                          contextos=contextos,
                                          tasa_contexto=3,  # Empírico
                                          ):
+    """
+    Modificación del algoritmo D-L propio para el entrenamiento de pesos. Devuelve, además del resultado, los
+    diccionarios de correspondencias.
+
+    Parameters
+    ----------
+    s1 : str
+        primera cadena en la aplicación del algoritmo D-L
+    s2 : str
+        segunda cadena en la aplicación del algoritmo D-L
+    pesos_delete : dict
+        diccionario con pesos para las eliminaciones
+    pesos_insert : dict
+        diccionario con pesos para las inserciones
+    pesos_subs : dict
+        diccionario con pesos para las sustituciones
+    pesos_transp : dict
+        diccionario con pesos para las transposiciones
+    contextos : dict
+        diccionario con contextos y sus pesos para las sustituciones
+    tasa_contexto : int
+        grado del factor de impacto de la coincidencia de un contexto
+    """
+
     d = {}
 
     d[(-1, -1)] = (0, [])
@@ -150,6 +187,32 @@ def damerau_levenshtein_similarity_training(s1, s2, pesos_delete=pesos_delete_de
                                    tasa_contexto=3,  # Empírico
                                    base_length=None
                                    ):
+    """
+    Modificación del algoritmo D-L propio (similaridad) para el entrenamiento de pesos. Devuelve, además del resultado,
+    los diccionarios de correspondencias.
+
+    Parameters
+    ----------
+    s1 : str
+        primera cadena en la aplicación del algoritmo D-L
+    s2 : str
+        segunda cadena en la aplicación del algoritmo D-L
+    pesos_delete : dict
+        diccionario con pesos para las eliminaciones
+    pesos_insert : dict
+        diccionario con pesos para las inserciones
+    pesos_subs : dict
+        diccionario con pesos para las sustituciones
+    pesos_transp : dict
+        diccionario con pesos para las transposiciones
+    contextos : dict
+        diccionario con contextos y sus pesos para las sustituciones
+    tasa_contexto : int
+        grado del factor de impacto de la coincidencia de un contexto
+    base_length : int
+        factor de longitud aplicable; si es None, se toma la longitud máxima entre las cadenas s1 y s2
+    """
+
     if base_length == None:
         base_length = max(len(s1), len(s2))
         # base_length = len(s2)
@@ -173,6 +236,24 @@ def damerau_levenshtein_similarity_training(s1, s2, pesos_delete=pesos_delete_de
 
 
 def comparacion_palabras_training(texto_tokenizado, expresion, longitudes, resultados):
+    """
+    Devuelve la similaridad D-L propia entre dos cadenas con unos parámetros indicados teniendo en cuenta la tolerancia
+    ante subcadenas del texto objetivo. Devuelve, además del resultado, los diccionarios de correspondencias.
+
+    Parameters
+    ----------
+    texto_tokenizado : list
+        primera cadena (objetivo) en la aplicación del algoritmo D-L, separada por tokens
+    expresion : str
+        segunda cadena en la aplicación del algoritmo D-L
+    longitudes : list
+        vector de enteros con las cantidades de tokens a considerar de la cadena objetivo
+    algoritmo : object
+        algoritmo de comparación de cadenas a aplicar
+    resultados : dict
+        vector base con los resultados de la ejecución
+    """
+
     max_resultado = -1
     pesos_delete_correspondencias_tmp_max = None
     pesos_insert_correspondencias_tmp_max = None

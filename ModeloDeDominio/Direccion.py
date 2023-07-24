@@ -4,6 +4,58 @@ from ModeloDeDominio.Region import Region, RegionVacia
 from Variables.estructura import superestructura, subestructura, dependencia, pasos_opcionales, pasos_iniciales, origen
 
 class Direccion:
+    """
+    Representa una dirección, es decir, un subconjunto de estructuras
+    asociadas a un topónimo concreto, es decir, a una Region.
+
+    Attributes
+    ----------
+    estado : object
+        Region Estado
+    estado_conf : object
+        Confianza de la Region Estado
+    ca : object
+        Region Comunidad Autónoma
+    ca_conf : object
+        Confianza de la Region Comunidad Autónoma
+    provincia : object
+        Region Provincia
+    provincia_conf : object
+        Confianza de la Region Provincia
+    comarca : object
+        Region Comarca
+    comarca_conf : object
+        Confianza de la Region Comarca
+    municipio : object
+        Region Municipio
+    municipio_conf : object
+        Confianza de la Region Municipio
+    nivel : object
+        Region nivel
+    nivel_conf : object
+        Confianza de la Region nivel
+    tipovia : object
+        Region tipo de vía
+    tipovia_conf : object
+        Confianza de la Region tipo de vía
+    via : object
+        Region vía
+    via_conf : object
+        Confianza de la Region vía
+    numero : object
+        Region número
+    numero_conf : object
+        Confianza de la Region número
+    codPostal : object
+        Region código postal
+    codPostal_conf : object
+        Confianza de la Region código postal
+    nombrepropio : object
+        Region nombre propio
+    nombrepropio_conf : object
+        Confianza de la Region nombre propio
+    """
+
     def __init__(self,
                  estado=None,
                  estado_conf=None,
@@ -110,6 +162,18 @@ class Direccion:
                                        nombrepropio_conf) if nombrepropio is not None else RegionVacia('nombrepropio')
 
     def comprobar(self, r):
+        """
+        Devuelve True si la Direccion se corresponde con una
+        dirección válida teniendo en cuenta los registros de referencia
+        de la base de datos central, es decir, si todas sus Regiones
+        existen y están coherentemente relacionadas.
+
+        Parameters
+        ----------
+        r : object
+            conexión con la BD Redis con los registros T1
+        """
+
         if type(self.estado) != RegionVacia and self.estado not in Region.regiones('estado', r):
             print('Fallo en el estado')
             return False
@@ -244,6 +308,17 @@ class Direccion:
         return True
 
     def confianza(self, pesos=None):
+        """
+        Devuelve un valor entre 0 y 1 que representa el grado de
+        confianza de la dirección. Este se calcula como la media
+        ponderada de sus Regiones.
+
+        Parameters
+        ----------
+        pesos : str
+            pesos para cada estructura dentro de la Direccion
+        """
+
         if pesos is None:
             pesos = np.array([0.5, 0.75, 0.75, 0.25, 1, 0.5, 1, 1.5, 0.5, 0.5, 1.5])
         else:
@@ -289,6 +364,25 @@ class Direccion:
         return resultado / np.sum(reales * pesos)
 
     def posibles_subregiones(self, estructura, r):
+        """
+        Devuelve todas las posibles Regiones que son subregión de
+        las estructuras inmediatamente anteriores en jerarquía (a la
+        especificada como parámetro) en la Direccion. Además, las
+        Direcciones construidas a partir de las estructuras
+        anteriores en jerarquía en la Dirección más dichas
+        subregiones, deben ser consistentes (confianza debe devolver
+        True).
+
+        Parameters
+        ----------
+        estructura : str
+            tipo de región. Valores posibles: {“estado”, “ca”, “provincia”,
+            “comarca”, “municipio”, “nivel”, “tipovia”, “numero”, “codPostal”,
+            “nombrepropio”}
+        r : object
+            conexión con la BD Redis con los registros T1
+        """
+
         if type(self.estado) == RegionVacia:
             estados = Region.regiones('estado', r)
         else:
@@ -398,6 +492,21 @@ class Direccion:
         return None
 
     def posibles_subdirecciones(self, estructura, r):
+        """
+        Devuelve las Direcciones construidas a partir de las
+        estructuras anteriores en jerarquía (a la especificada como
+        parámetro) en la Dirección más dichas subregiones, deben ser
+        consistentes (confianza debe devolver True).
+
+        Parameters
+        ----------
+        estructura : str
+            tipo de región. Valores posibles: {“estado”, “ca”, “provincia”,
+            “comarca”, “municipio”, “nivel”, “tipovia”, “numero”, “codPostal”,
+            “nombrepropio”}
+        r : object
+            conexión con la BD Redis con los registros T1
+        """
 
         direcciones = []
 
@@ -454,6 +563,18 @@ class Direccion:
         return direcciones
 
     def completitud(self, pesos=None):
+        """
+        Devuelve un valor entre 0 y 1 que representa el grado de
+        completitud (contrario a la ambigüedad) de la dirección. El
+        grado de ambigüedad se calcula como el número de
+        RegionesVacias ponderado por un vector de pesos.
+
+        Parameters
+        ----------
+        pesos : str
+            pesos para cada estructura dentro de la Direccion
+        """
+
         if pesos is None:
             pesos = np.array([1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0])
             pesos = pesos / np.sum(pesos)

@@ -12,6 +12,20 @@ from Recorrido.obtener_direcciones_paralelo import obtener_direcciones_iniciales
 from utiles import recortar_cadena
 
 def recorrer_BD_process(cadena_origen, r, comentarios=True):
+    """
+    Se recorre la BD contrastando los registros con la cadena objetivo, devolviendo las direcciones coincidentes.
+    El proceso se ejecuta de forma paralela.
+
+    Parameters
+    ----------
+    cadena_origen : str
+        cadena con la dirección objetivo
+    r : object
+        conexión con la BD Redis con los registros T1
+    comentarios : bool
+        permite especificar si se desea mostrar comentarios informativos del proceso
+    """
+
     texto_tokenizado = re.sub(' +', ' ', re.sub(';|,|\.|¿|\?|¡|!', ' ', cadena_origen).strip()).split()
 
     direcciones_posibles = {'estado': set(),
@@ -154,6 +168,7 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
                                 re.sub(' +', ' ', re.sub(';|,|\.|¿|\?|¡|!', ' ', direccion[1]).strip()).split())
 
                 processes.append(mp.Process(target=obtener_direcciones, args=(regions_subdict,
+                                                                              texto_tokenizado,
                                                                               np.zeros((len(texto_tokenizado), 3)),
                                                                               q,
                                                                               chivato)))
@@ -249,6 +264,7 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
 
                             processes.append(mp.Process(target=obtener_direcciones,
                                                         args=(regions_subdict,
+                                                              texto_tokenizado,
                                                               np.zeros((len(texto_tokenizado), 3)),
                                                               q,
                                                               chivato)))
@@ -312,6 +328,19 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
     return direcciones_posibles
 
 def mejores_resultados_recorrer_BD_process(cadena_origen, r, comentarios=False):
+    """
+    Se obtienen los mejores resultados devueltos por recorrer_BD_process.
+
+    Parameters
+    ----------
+    cadena_origen : str
+        cadena con la dirección objetivo
+    r : object
+        conexión con la BD Redis con los registros T1
+    comentarios : bool
+        permite especificar si se desea mostrar comentarios informativos del proceso
+    """
+
     resultados = recorrer_BD_process(cadena_origen, r, comentarios)
 
     max_completitud = 0

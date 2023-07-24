@@ -5,6 +5,23 @@ def obtener_direcciones_iniciales_nuevas(regiones,
                                          resultados_candidato,
                                          q,
                                          chivato):
+    """
+    Las regiones iniciales se comparan una por una con la cadena de origen tokenizada, y se almacenan en la cola q
+    los mejores resultados obtenidos por cada una de ellas.
+
+    Parameters
+    ----------
+    regiones : list
+        lista de regiones a comparar
+    texto_tokenizado : list
+        cadena origen tokenizada
+    resultados_candidato : list
+        array de Numpy que permite calcular la matriz D del algoritmo D-L
+    q : object
+        cola de deposición de los mejores resultados
+    chivato : object
+        cola donde se especifica que el proceso ha concluido
+    """
 
     for region in regiones:
 
@@ -34,9 +51,27 @@ def obtener_direcciones_iniciales_nuevas(regiones,
     chivato.put((1))
 
 def obtener_direcciones(regiones,
+                        texto_tokenizado,
                         resultados_candidato,
                         q,
                         chivato):
+    """
+    Las regiones se comparan una por una con la cadena de origen tokenizada, y se almacenan en la cola q los mejores
+    resultados obtenidos por cada una de ellas.
+
+    Parameters
+    ----------
+    regiones : list
+        lista de regiones a comparar
+    texto_tokenizado : list
+        cadena origen tokenizada
+    resultados_candidato : list
+        array de Numpy que permite calcular la matriz D del algoritmo D-L
+    q : object
+        cola de deposición de los mejores resultados
+    chivato : object
+        cola donde se especifica que el proceso ha concluido
+    """
 
     for region in regiones:
 

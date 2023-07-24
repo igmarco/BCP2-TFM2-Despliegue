@@ -12,6 +12,20 @@ from utiles import recortar_cadena
 
 
 def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
+    """
+    Se recorre la BD contrastando los registros con la cadena objetivo, devolviendo las direcciones coincidentes.
+    El proceso se ejecuta de forma secuencial.
+
+    Parameters
+    ----------
+    cadena_origen : str
+        cadena con la dirección objetivo
+    r : object
+        conexión con la BD Redis con los registros T1
+    comentarios : bool
+        permite especificar si se desea mostrar comentarios informativos del proceso
+    """
+
     texto_tokenizado = re.sub(' +', ' ', re.sub(';|,|\.|¿|\?|¡|!', ' ', cadena_origen).strip()).split()
 
     direcciones_posibles = {'estado': set(),
@@ -318,6 +332,19 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
 
 
 def mejores_resultados_recorrer_BD_secuencial(cadena_origen, r, comentarios=False):
+    """
+    Se obtienen los mejores resultados devueltos por recorrer_BD_secuencial.
+
+    Parameters
+    ----------
+    cadena_origen : str
+        cadena con la dirección objetivo
+    r : object
+        conexión con la BD Redis con los registros T1
+    comentarios : bool
+        permite especificar si se desea mostrar comentarios informativos del proceso
+    """
+
     resultados = recorrer_BD_secuencial(cadena_origen, r, comentarios)
 
     max_completitud = 0

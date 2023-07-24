@@ -17,6 +17,9 @@ app = FastAPI()
 
 @app.get("/")
 def description():
+    """
+    Se devuelve una descripción en castellano e inglés del servicio ofrecido por el API REST.
+    """
     return {"Descripción (ESP)": "El servicio DS-AIT (Herramienta de Ciencia de Datos aplicada a la Identificación de Direcciones)es una herramienta que permite identificar la información geográfica concreta a partir de una cadena de texto libre. Este proceso se lleva a cabo a través del contraste con una base de datos normalizada, alimentada con información de IDERioja.",
             "Description (ENG)": "The DS-AIT service (Data Science Tool applied to Address Identification) is a tool that allows the identification of specific geographic information from a free text string. This process is carried out through the contrast with a normalized database, fed with information from IDERioja."}
 
@@ -25,6 +28,19 @@ def description():
 def identification_secuential(string: str,
               only_best_results: bool = False,
               delete_from_server: bool = True):
+    """
+    Se realiza el contraste con los registros T1 para obtener las direcciones reales coincidentes con la cadena
+    objetivo (versión secuencial).
+
+    Parameters
+    ----------
+    string : str
+        cadena con la dirección objetivo
+    only_best_results : bool
+        permite especificar si se desea mostrar todos los resultados o solo los mejores
+    delete_from_server : bool
+        permite especificar si se desea que se almacene la petición en el servidor
+    """
 
     if not delete_from_server:
         with open('DatosCSV/peticiones.txt', 'a', encoding='utf-8') as peticiones:
@@ -43,6 +59,19 @@ def identification_secuential(string: str,
 # def identification_parallel(string: str,
 #               only_best_results: bool = False,
 #               delete_from_server: bool = True):
+#     """
+#     Se realiza el contraste con los registros T1 para obtener las direcciones reales coincidentes con la cadena
+#     objetivo (versión paralela).
+#
+#     Parameters
+#     ----------
+#     string : str
+#         cadena con la dirección objetivo
+#     only_best_results : bool
+#         permite especificar si se desea mostrar todos los resultados o solo los mejores
+#     delete_from_server : bool
+#         permite especificar si se desea que se almacene la petición en el servidor
+#     """
 #
 #     if not delete_from_server:
 #         with open('DatosCSV/peticiones.txt', 'a', encoding='utf-8') as peticiones:
@@ -70,6 +99,37 @@ def training(cadena: str,
              numero: Union[str, None] = None,
              codPostal: Union[str, None] = None,
              nombrepropio: Union[str, None] = None, ):
+    """
+    Se ejecuta un entrenamiento con el registro introducido. Para ello se utiliza como validación tanto la confianza
+    del resultado como el contraste con los valores reales introducidos.
+
+    Parameters
+    ----------
+    cadena : str
+        cadena con la dirección objetivo
+    estado : str
+        Region estado
+    ca : str
+        Region ca
+    provincia : str
+        Region provincia
+    comarca : str
+        Region comarca
+    municipio : str
+        Region municipio
+    nivel : str
+        Region nivel
+    tipovia : str
+        Region tipovia
+    via : str
+        Region via
+    numero : str
+        Region numero
+    codPostal : str
+        Region codPostal
+    nombrepropio : str
+        Region nombrepropio
+    """
 
     r_BD = redis.StrictRedis(host='localhost', port=6379, db=11)
     r_pesos = redis.StrictRedis(host='localhost', port=6379, db=12)

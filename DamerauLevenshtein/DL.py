@@ -2,6 +2,19 @@ from Variables.pesos import pesos_delete_def, pesos_insert_def, pesos_subs_def, 
 
 
 def print_matrix(d, s1, s2):
+    """
+    Muestra por pantalla la representación de la matriz D (del algoritmo D-L) implementada a través de un diccionario
+
+    Parameters
+    ----------
+    d : str
+        matriz representada como un diccionario cuyas claves son tuplas binarias
+    s1 : str
+        primera cadena en la aplicación del algoritmo D-L
+    s2 : str
+        segunda cadena en la aplicación del algoritmo D-L
+    """
+
     for i in range(-1,len(s1)):
         for j in range(-1,len(s2)):
             if (i,j) in d:
@@ -18,6 +31,28 @@ def damerau_levenshtein_distance(s1, s2, pesos_delete=pesos_delete_def,
                                  contextos=contextos,
                                  tasa_contexto=3,  # Empírico
                                  ):
+    """
+    Devuelve la distancia D-L propia entre dos cadenas con unos parámetros indicados
+
+    Parameters
+    ----------
+    s1 : str
+        primera cadena en la aplicación del algoritmo D-L
+    s2 : str
+        segunda cadena en la aplicación del algoritmo D-L
+    pesos_delete : dict
+        diccionario con pesos para las eliminaciones
+    pesos_insert : dict
+        diccionario con pesos para las inserciones
+    pesos_subs : dict
+        diccionario con pesos para las sustituciones
+    pesos_transp : dict
+        diccionario con pesos para las transposiciones
+    contextos : dict
+        diccionario con contextos y sus pesos para las sustituciones
+    tasa_contexto : int
+        grado del factor de impacto de la coincidencia de un contexto
+    """
 
     d = {}
 
@@ -79,6 +114,31 @@ def damerau_levenshtein_similarity(s1, s2, pesos_delete=pesos_delete_def,
                                    tasa_contexto=3,  # Empírico
                                    base_length=None
                                    ):
+    """
+    Devuelve la similaridad D-L propia entre dos cadenas con unos parámetros indicados.
+
+    Parameters
+    ----------
+    s1 : str
+        primera cadena en la aplicación del algoritmo D-L
+    s2 : str
+        segunda cadena en la aplicación del algoritmo D-L
+    pesos_delete : dict
+        diccionario con pesos para las eliminaciones
+    pesos_insert : dict
+        diccionario con pesos para las inserciones
+    pesos_subs : dict
+        diccionario con pesos para las sustituciones
+    pesos_transp : dict
+        diccionario con pesos para las transposiciones
+    contextos : dict
+        diccionario con contextos y sus pesos para las sustituciones
+    tasa_contexto : int
+        grado del factor de impacto de la coincidencia de un contexto
+    base_length : int
+        factor de longitud aplicable; si es None, se toma la longitud máxima entre las cadenas s1 y s2
+    """
+
     if base_length == None:
         base_length = max(len(s1), len(s2))
         # base_length = len(s2)
@@ -87,6 +147,24 @@ def damerau_levenshtein_similarity(s1, s2, pesos_delete=pesos_delete_def,
                                                 tasa_contexto) / base_length
 
 def comparacion_palabras(texto_tokenizado, expresion, longitudes, algoritmo, resultados):
+    """
+    Devuelve la similaridad D-L propia entre dos cadenas con unos parámetros indicados teniendo en cuenta la tolerancia
+    ante subcadenas del texto objetivo.
+
+    Parameters
+    ----------
+    texto_tokenizado : list
+        primera cadena (objetivo) en la aplicación del algoritmo D-L, separada por tokens
+    expresion : str
+        segunda cadena en la aplicación del algoritmo D-L
+    longitudes : list
+        vector de enteros con las cantidades de tokens a considerar de la cadena objetivo
+    algoritmo : object
+        algoritmo de comparación de cadenas a aplicar
+    resultados : dict
+        vector base con los resultados de la ejecución
+    """
+
     for pos in range(len(texto_tokenizado)):
         for l_ind, l in enumerate(longitudes):
             if pos + min(longitudes) < len(texto_tokenizado):
