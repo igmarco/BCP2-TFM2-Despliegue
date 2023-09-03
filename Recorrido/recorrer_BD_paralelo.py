@@ -49,7 +49,7 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
                          'codPostal': {},
                          'nombrepropio': {}}
 
-    tolerancia = 0.75
+    tolerancia = 0.8
 
     if __name__ == "__main__":
 

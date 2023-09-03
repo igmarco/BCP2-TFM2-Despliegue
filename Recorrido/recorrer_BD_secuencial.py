@@ -50,7 +50,7 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
                          'nombrepropio': {}}
 
     direcciones_iniciales = {(Direccion(), cadena_origen), }
-    tolerancia = 0.75
+    tolerancia = 0.8
 
     for estructura_inicial in pasos_iniciales:
 
@@ -69,31 +69,35 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
 
         for region in regiones:
             if region.nombre not in nombres_evaluados[estructura_inicial]:
+                for direccion in direcciones_iniciales:
 
-                nombres = region.nombres()
+                    nombres = region.nombres()
 
-                mejor_resultado = {'Variante': '', 'Inicio': 0, 'Longitud': 0, 'Similaridad': -1}
+                    mejor_resultado = {'Variante': '', 'Inicio': 0, 'Longitud': 0, 'Similaridad': -1}
 
-                for candidato in nombres:
+                    for candidato in nombres:
 
-                    longitudes = range(len(candidato.split()) - 1, len(candidato.split()) + 2)
-                    resultados = np.zeros((len(texto_tokenizado), len(longitudes)))
+                        longitudes = range(len(candidato.split()) - 1, len(candidato.split()) + 2)
+                        resultados = np.zeros((len(texto_tokenizado), len(longitudes)))
 
-                    resultados_candidato = comparacion_palabras(texto_tokenizado,
-                                                                candidato,
-                                                                longitudes,
-                                                                damerau_levenshtein_similarity,
-                                                                resultados)
+                        texto_tokenizado = re.sub(' +', ' ',
+                                                  re.sub(';|,|\.|¿|\?|¡|!', ' ', direccion[1]).strip()).split()
 
-                    for row in range(len(texto_tokenizado) - min(longitudes)):
-                        for column in range(len(longitudes)):
-                            if row + column + min(longitudes) < len(texto_tokenizado) and resultados_candidato[row, column] > mejor_resultado['Similaridad']:
-                                mejor_resultado = {'Variante': candidato,
-                                                   'Inicio': row,
-                                                   'Longitud': column + len(candidato.split()) - 1,
-                                                   'Similaridad': float(resultados_candidato[row, column])}
+                        resultados_candidato = comparacion_palabras(texto_tokenizado,
+                                                                    candidato,
+                                                                    longitudes,
+                                                                    damerau_levenshtein_similarity,
+                                                                    resultados)
 
-                nombres_evaluados[estructura_inicial][region.nombre] = mejor_resultado
+                        for row in range(len(texto_tokenizado) - min(longitudes)):
+                            for column in range(len(longitudes)):
+                                if row + column + min(longitudes) < len(texto_tokenizado) and resultados_candidato[row, column] > mejor_resultado['Similaridad']:
+                                    mejor_resultado = {'Variante': candidato,
+                                                       'Inicio': row,
+                                                       'Longitud': column + len(candidato.split()) - 1,
+                                                       'Similaridad': float(resultados_candidato[row, column])}
+
+                    nombres_evaluados[estructura_inicial][region.nombre] = mejor_resultado
 
             if nombres_evaluados[estructura_inicial][region.nombre]['Similaridad'] >= tolerancia:
 
