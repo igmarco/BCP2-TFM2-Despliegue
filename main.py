@@ -156,9 +156,4 @@ if __name__ == "__main__":
     # http://127.0.0.1:8000/
     # http://127.0.0.1:8000/docs
     # http://127.0.0.1:8000/identification/España
-
-    # print('Primer intento')
-    # r = redis.StrictRedis(host='localhost', port=6379, db=11)
-    # resultados, mejores_resultados = mejores_resultados_recorrer_BD_secuencial('España, La Rioja, Logroño, Calle Eibar, 16', r, comentarios=False)
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
