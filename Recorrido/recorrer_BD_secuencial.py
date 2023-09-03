@@ -50,7 +50,7 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
                          'nombrepropio': {}}
 
     direcciones_iniciales = {(Direccion(), cadena_origen), }
-    tolerancia = 0.7
+    tolerancia = 0.75
 
     for estructura_inicial in pasos_iniciales:
 
@@ -74,7 +74,6 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
 
                 mejor_resultado = {'Variante': '', 'Inicio': 0, 'Longitud': 0, 'Similaridad': -1}
 
-                mejor_resultado = {'Similaridad': 0}
                 for candidato in nombres:
 
                     longitudes = range(len(candidato.split()) - 1, len(candidato.split()) + 2)
@@ -99,8 +98,9 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
             if nombres_evaluados[estructura_inicial][region.nombre]['Similaridad'] >= tolerancia:
 
                 for direccion in direcciones_iniciales:
-                    direccion[0].__dict__[estructura_inicial] = region
-                    direccion[0].__dict__[estructura_inicial].confianza = \
+                    direcc = direccion[0].__copy__()
+                    direcc.__dict__[estructura_inicial] = region
+                    direcc.__dict__[estructura_inicial].confianza = \
                         nombres_evaluados[estructura_inicial][region.nombre]['Similaridad']
 
                     nueva_cadena, cadena_restante = recortar_cadena(direccion[1],
@@ -109,9 +109,9 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
                                                                     nombres_evaluados[estructura_inicial][
                                                                         region.nombre]['Longitud'])
 
-                    direccion[0].__dict__[estructura_inicial].match = cadena_restante
+                    direcc.__dict__[estructura_inicial].match = cadena_restante
 
-                    direcciones_iniciales_nuevas.add((direccion[0], nueva_cadena))
+                    direcciones_iniciales_nuevas.add((direcc, nueva_cadena))
 
         direcciones_iniciales = direcciones_iniciales_nuevas if len(
             direcciones_iniciales_nuevas) > 0 else direcciones_iniciales

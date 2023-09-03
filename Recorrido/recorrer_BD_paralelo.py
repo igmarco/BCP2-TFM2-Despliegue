@@ -49,7 +49,7 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
                          'codPostal': {},
                          'nombrepropio': {}}
 
-    tolerancia = 0.7
+    tolerancia = 0.75
 
     if __name__ == "__main__":
 
@@ -109,17 +109,18 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
             for region in regiones:
                 if nombres_evaluados[estructura_inicial][region.nombre]['Similaridad'] >= tolerancia:
                     for direccion in direcciones_iniciales:
-                        direccion[0].__dict__[estructura_inicial] = region
-                        direccion[0].__dict__[estructura_inicial].confianza = \
+                        direcc = direccion[0].__copy__()
+                        direcc.__dict__[estructura_inicial] = region
+                        direcc.__dict__[estructura_inicial].confianza = \
                         nombres_evaluados[estructura_inicial][region.nombre]['Similaridad']
 
                         nueva_cadena, cadena_restante = recortar_cadena(direccion[1],
                                                        nombres_evaluados[estructura_inicial][region.nombre]['Inicio'],
                                                        nombres_evaluados[estructura_inicial][region.nombre]['Longitud'])
 
-                        direccion[0].__dict__[estructura_inicial].match = cadena_restante
+                        direcc.__dict__[estructura_inicial].match = cadena_restante
 
-                        direcciones_iniciales_nuevas.add((direccion[0], nueva_cadena))
+                        direcciones_iniciales_nuevas.add((direcc, nueva_cadena))
 
             direcciones_iniciales = direcciones_iniciales_nuevas if len(
                 direcciones_iniciales_nuevas) > 0 else direcciones_iniciales
