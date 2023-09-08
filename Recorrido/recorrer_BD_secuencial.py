@@ -4,11 +4,125 @@ import re
 from ModeloDeDominio.Direccion import Direccion
 from ModeloDeDominio.Region import Region, RegionVacia
 
-from Variables.estructura import superestructura, subestructura, pasos_opcionales, pasos_iniciales, origen
+from Variables.estructura import estructuras, superestructura, subestructura, pasos_opcionales, pasos_iniciales, origen
 
 from DamerauLevenshtein.DL import comparacion_palabras, damerau_levenshtein_similarity
 
 from utiles import recortar_cadena
+
+def recorrer_BD_completa_secuencial(cadena_origen, r, comentarios=True):
+    """
+    Se recorre la BD contrastando los registros con la cadena objetivo, devolviendo las direcciones coincidentes.
+    El proceso se ejecuta de forma secuencial.
+
+    Parameters
+    ----------
+    cadena_origen : str
+        cadena con la dirección objetivo
+    r : object
+        conexión con la BD Redis con los registros T1
+    comentarios : bool
+        permite especificar si se desea mostrar comentarios informativos del proceso
+    """
+
+    texto_tokenizado = re.sub(' +', ' ', re.sub(';|,|\.|¿|\?|¡|!', ' ', cadena_origen).strip()).split()
+
+    direcciones_posibles = {'estado': set(),
+                            'ca': set(),
+                            'provincia': set(),
+                            'comarca': set(),
+                            'municipio': set(),
+                            'nivel': set(),
+                            'via': set(),
+                            'numero': set(),
+                            'codPostal': set()}
+    nombres_evaluados = {'estado': {},
+                         'ca': {},
+                         'provincia': {},
+                         'comarca': {},
+                         'municipio': {},
+                         'nivel': {},
+                         'tipovia': {},
+                         'via': {},
+                         'numero': {},
+                         'codPostal': {},
+                         'nombrepropio': {}}
+
+    direcciones = {(Direccion(), cadena_origen), }
+    tolerancia = 0.75
+
+    for estr in estructuras:
+
+        if comentarios:
+            print(estr + ':')
+
+        regiones = []
+        for region in Region.regiones(estr, r):
+            regiones.append(region)
+
+        if comentarios:
+            print(list(regiones))
+            print()
+
+        direcciones_nuevas = set()
+
+        for region in regiones:
+            if region.nombre not in nombres_evaluados[estr]:
+                for direccion in direcciones:
+
+                    nombres = region.nombres()
+
+                    mejor_resultado = {'Variante': '', 'Inicio': 0, 'Longitud': 0, 'Similaridad': -1}
+
+                    for candidato in nombres:
+
+                        longitudes = range(len(candidato.split()) - 1, len(candidato.split()) + 2)
+                        resultados = np.zeros((len(texto_tokenizado), len(longitudes)))
+
+                        texto_tokenizado = re.sub(' +', ' ',
+                                                  re.sub(';|,|\.|¿|\?|¡|!', ' ', direccion[1]).strip()).split()
+
+                        resultados_candidato = comparacion_palabras(texto_tokenizado,
+                                                                    candidato,
+                                                                    longitudes,
+                                                                    damerau_levenshtein_similarity,
+                                                                    resultados)
+
+                        for row in range(len(texto_tokenizado) - min(longitudes)):
+                            for column in range(len(longitudes)):
+                                if row + column + min(longitudes) < len(texto_tokenizado) and resultados_candidato[
+                                    row, column] > mejor_resultado['Similaridad']:
+                                    mejor_resultado = {'Variante': candidato,
+                                                       'Inicio': row,
+                                                       'Longitud': column + len(candidato.split()) - 1,
+                                                       'Similaridad': float(resultados_candidato[row, column])}
+
+                    nombres_evaluados[estr][region.nombre] = mejor_resultado
+
+            if nombres_evaluados[estr][region.nombre]['Similaridad'] >= tolerancia:
+
+                for direccion in direcciones:
+                    direcc = direccion[0].__copy__()
+                    direcc.__dict__[estr] = region
+                    direcc.__dict__[estr].confianza = \
+                        nombres_evaluados[estr][region.nombre]['Similaridad']
+
+                    nueva_cadena, cadena_restante = recortar_cadena(direccion[1],
+                                                                    nombres_evaluados[estr][
+                                                                        region.nombre]['Inicio'],
+                                                                    nombres_evaluados[estr][
+                                                                        region.nombre]['Longitud'])
+
+                    direcc.__dict__[estr].match = cadena_restante
+
+                    direcciones_nuevas.add((direcc, nueva_cadena))
+
+        direcciones = direcciones_nuevas if len(
+            direcciones_nuevas) > 0 else direcciones
+
+    direcciones_posibles[origen] = direcciones
+
+
 
 
 def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
@@ -50,7 +164,7 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
                          'nombrepropio': {}}
 
     direcciones_iniciales = {(Direccion(), cadena_origen), }
-    tolerancia = 0.8
+    tolerancia = 0.75
 
     for estructura_inicial in pasos_iniciales:
 
@@ -334,6 +448,45 @@ def recorrer_BD_secuencial(cadena_origen, r, comentarios=True):
 
     return direcciones_posibles
 
+def mejores_resultados_recorrer_BD_completa_secuencial(cadena_origen, r, comentarios=False):
+    """
+    Se obtienen los mejores resultados devueltos por recorrer_BD_secuencial.
+
+    Parameters
+    ----------
+    cadena_origen : str
+        cadena con la dirección objetivo
+    r : object
+        conexión con la BD Redis con los registros T1
+    comentarios : bool
+        permite especificar si se desea mostrar comentarios informativos del proceso
+    """
+
+    resultados = recorrer_BD_completa_secuencial(cadena_origen, r, comentarios)
+
+    resultados_herentes = []
+
+    for resultado in resultados['numero']:
+        if resultado[0].comprobar(r):
+            resultados_herentes.append(resultado)
+
+
+    max_completitud = 0
+    for resultado in resultados_herentes:
+        max_completitud = max(max_completitud, resultado[0].completitud())
+
+    max_confianza = 0
+    for resultado in resultados_herentes:
+        if resultado[0].completitud() == max_completitud:
+            max_confianza = max(max_confianza, resultado[0].confianza())
+
+    mejores_resultados = []
+    for resultado in resultados_herentes:
+        if resultado[0].completitud() == max_completitud and resultado[0].confianza() == max_confianza:
+            mejores_resultados.append(resultado)
+
+    return resultados, mejores_resultados
+
 
 def mejores_resultados_recorrer_BD_secuencial(cadena_origen, r, comentarios=False):
     """
@@ -366,3 +519,9 @@ def mejores_resultados_recorrer_BD_secuencial(cadena_origen, r, comentarios=Fals
             mejores_resultados.append(resultado)
 
     return resultados, mejores_resultados
+
+
+# import redis
+# r = redis.StrictRedis(host='localhost', port=6379, db=11)
+# resultados, mejores_resultados = mejores_resultados_recorrer_BD_secuencial('España, La Rioja, Logroño, Calle Eibar, 16', r, comentarios=False)
+# print(mejores_resultados)

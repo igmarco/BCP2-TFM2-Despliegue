@@ -1,7 +1,9 @@
+import re
+
 from DamerauLevenshtein.DL import damerau_levenshtein_similarity, comparacion_palabras
 
 def obtener_direcciones_iniciales_nuevas(regiones,
-                                         texto_tokenizado,
+                                         direcciones_iniciales,
                                          resultados_candidato,
                                          q,
                                          chivato):
@@ -24,29 +26,31 @@ def obtener_direcciones_iniciales_nuevas(regiones,
     """
 
     for region in regiones:
+        for direccion in direcciones_iniciales:
 
-        nombres = region.nombres()
+            nombres = region.nombres()
 
-        mejor_resultado = {'Variante': '', 'Inicio': 0, 'Longitud': 0, 'Similaridad': -1}
-        for candidato in nombres:
+            mejor_resultado = {'Variante': '', 'Inicio': 0, 'Longitud': 0, 'Similaridad': -1}
+            for candidato in nombres:
 
-            longitudes = range(len(candidato.split()) - 1, len(candidato.split()) + 2)
+                longitudes = range(len(candidato.split()) - 1, len(candidato.split()) + 2)
+                texto_tokenizado = re.sub(' +', ' ', re.sub(';|,|\.|¿|\?|¡|!', ' ', direccion[1]).strip()).split()
 
-            comparacion_palabras(texto_tokenizado,
-                                candidato,
-                                longitudes=longitudes,
-                                algoritmo=damerau_levenshtein_similarity,
-                                resultados=resultados_candidato)
+                comparacion_palabras(texto_tokenizado,
+                                    candidato,
+                                    longitudes=longitudes,
+                                    algoritmo=damerau_levenshtein_similarity,
+                                    resultados=resultados_candidato)
 
-            for row in range(len(texto_tokenizado) - min(longitudes)):
-                for column in range(len(longitudes)):
-                    if row + column + min(longitudes) < len(texto_tokenizado) and resultados_candidato[row, column] > mejor_resultado['Similaridad']:
-                        mejor_resultado = {'Variante': candidato,
-                                           'Inicio': row,
-                                           'Longitud': column + len(candidato.split()) - 1,
-                                           'Similaridad': float(resultados_candidato[row, column])}
+                for row in range(len(texto_tokenizado) - min(longitudes)):
+                    for column in range(len(longitudes)):
+                        if row + column + min(longitudes) < len(texto_tokenizado) and resultados_candidato[row, column] > mejor_resultado['Similaridad']:
+                            mejor_resultado = {'Variante': candidato,
+                                               'Inicio': row,
+                                               'Longitud': column + len(candidato.split()) - 1,
+                                               'Similaridad': float(resultados_candidato[row, column])}
 
-        q.put((region.nombre, mejor_resultado))
+            q.put((region.nombre, mejor_resultado))
 
     chivato.put((1))
 

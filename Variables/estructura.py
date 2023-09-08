@@ -1,3 +1,16 @@
+# Estructuras existentes.
+estructuras = ['estado',
+               'tipovia',
+               'nombrepropio',
+               'ca',
+               'provincia',
+               'comarca',
+               'municipio',
+               'nivel',
+               'via',
+               'codPostal',
+               'numero']
+
 # Superestructuras (ordenadas jerárquicamente) para cada estructura.
 superestructura = {'ca':['estado'],
                    'provincia':['ca'],

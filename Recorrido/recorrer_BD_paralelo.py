@@ -49,7 +49,7 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
                          'codPostal': {},
                          'nombrepropio': {}}
 
-    tolerancia = 0.8
+    tolerancia = 0.75
 
     if __name__ == "__main__":
 
@@ -84,7 +84,7 @@ def recorrer_BD_process(cadena_origen, r, comentarios=True):
 
                 processes.append(mp.Process(target=obtener_direcciones_iniciales_nuevas,
                                             args=(regions_subarr,
-                                                  texto_tokenizado,
+                                                  direcciones_iniciales,
                                                   np.zeros((len(texto_tokenizado),3)),
                                                   q,
                                                   chivato)))
@@ -359,3 +359,9 @@ def mejores_resultados_recorrer_BD_process(cadena_origen, r, comentarios=False):
             mejores_resultados.append(resultado)
 
     return resultados, mejores_resultados
+
+
+# import redis
+# r = redis.StrictRedis(host='localhost', port=6379, db=11)
+# resultados, mejores_resultados = mejores_resultados_recorrer_BD_process('España, La Rioja, Logroño, Calle Eibar, 16', r, comentarios=False)
+# print(mejores_resultados)

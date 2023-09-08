@@ -7,7 +7,7 @@ import uvicorn
 from typing import Union
 import redis
 
-from Recorrido.recorrer_BD_secuencial import mejores_resultados_recorrer_BD_secuencial
+from Recorrido.recorrer_BD_secuencial import mejores_resultados_recorrer_BD_secuencial, mejores_resultados_recorrer_BD_completa_secuencial
 from Recorrido.recorrer_BD_paralelo import mejores_resultados_recorrer_BD_process
 
 from Entrenamiento.entrenamiento_pesos import entrenar_pesos_fila
@@ -24,9 +24,9 @@ def description():
             "Description (ENG)": "The DS-AIT service (Data Science Tool applied to Address Identification) is a tool that allows the identification of specific geographic information from a free text string. This process is carried out through the contrast with a normalized database, fed with information from IDERioja."}
 
 
-@app.get("/identification/{string}")
+@app.get("/identification/sequential/{string}")
 def identification_secuential(string: str,
-              only_best_results: bool = False,
+              only_best_results: bool = True,
               delete_from_server: bool = True):
     """
     Se realiza el contraste con los registros T1 para obtener las direcciones reales coincidentes con la cadena
@@ -52,12 +52,12 @@ def identification_secuential(string: str,
     if only_best_results:
         return mejores_resultados
     else:
-        return resultados, mejores_resultados
+        return resultados
 
 
-# @app.get("/identification_parallel/{string}")
+# @app.get("/identification/parallel/{string}")
 # def identification_parallel(string: str,
-#               only_best_results: bool = False,
+#               only_best_results: bool = True,
 #               delete_from_server: bool = True):
 #     """
 #     Se realiza el contraste con los registros T1 para obtener las direcciones reales coincidentes con la cadena
@@ -80,10 +80,43 @@ def identification_secuential(string: str,
 #     r = redis.StrictRedis(host='localhost', port=6379, db=11)
 #     resultados, mejores_resultados = mejores_resultados_recorrer_BD_process(string, r, comentarios=False)
 #
+#     print(mejores_resultados)
+#
 #     if only_best_results:
 #         return mejores_resultados
 #     else:
-#         return resultados, mejores_resultados
+#         return resultados
+
+
+@app.get("/identification/sequential/complete/{string}")
+def identification_complete_sequential(string: str,
+              only_best_results: bool = True,
+              delete_from_server: bool = True):
+    """
+    Se realiza el contraste con los registros T1 para obtener las direcciones reales coincidentes con la cadena
+    objetivo (versión secuencial). Se emplea el algoritmo de contraste completo con la BD.
+
+    Parameters
+    ----------
+    string : str
+        cadena con la dirección objetivo
+    only_best_results : bool
+        permite especificar si se desea mostrar todos los resultados o solo los mejores
+    delete_from_server : bool
+        permite especificar si se desea que se almacene la petición en el servidor
+    """
+
+    if not delete_from_server:
+        with open('DatosCSV/peticiones.txt', 'a', encoding='utf-8') as peticiones:
+            peticiones.write(string + '\n')
+
+    r = redis.StrictRedis(host='localhost', port=6379, db=11)
+    resultados, mejores_resultados = mejores_resultados_recorrer_BD_completa_secuencial(string, r, comentarios=False)
+
+    if only_best_results:
+        return mejores_resultados
+    else:
+        return resultados
 
 
 @app.post("/training/{cadena}")
@@ -155,5 +188,7 @@ def training(cadena: str,
 if __name__ == "__main__":
     # http://127.0.0.1:8000/
     # http://127.0.0.1:8000/docs
-    # http://127.0.0.1:8000/identification/España
+    # http://127.0.0.1:8000/identification/sequential/España
+    # http://127.0.0.1:8000/identification/parallel/España
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
